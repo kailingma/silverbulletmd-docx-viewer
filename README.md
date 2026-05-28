@@ -6,27 +6,28 @@ Supports `.docx`, `.docm`, `.dotx`. Legacy binary `.doc` files are not supported
 
 > Requires network access to jsDelivr to load the docx-preview library on first open.
 
-## Install
+## Install via Library Manager (recommended)
 
-Add to your `PLUGS` page (or via `config.set` in Space Lua):
+Run **Library: Install** and paste:
+
+```
+https://github.com/yourusername/silverbullet-docxviewer/blob/main/PLUG.md
+```
+
+## Install manually
+
+Add to a page tagged `meta/config` in your space:
 
 ```yaml
 plugs:
-  - "github:kailingma/silverbullet-docxviewer/docxviewer.plug.js"
+  - "github:yourusername/silverbullet-docxviewer/docxviewer.plug.js"
 ```
 
-Then run **Plugs: Update**.
-
-For a pinned release:
-
-```yaml
-plugs:
-  - "ghr:kailingma/silverbullet-docxviewer"
-```
+For a pinned release: `ghr:yourusername/silverbullet-docxviewer`
 
 ## Releases
 
-Commits whose message matches `v<semver>` (e.g. `v0.2.0`) are automatically built and published as a GitHub Release with the compiled plug attached.
+Commits whose message starts with `v<semver>` (e.g. `v0.2.0`) are automatically built and published as a GitHub Release.
 
 ## Building locally
 
