@@ -1,0 +1,6 @@
+name: docxviewer
+
+functions:
+  DOCXEditor:
+    path: ./editor.ts:editor
+    editor: ["doc", "docx", "dotx", "docm"]
