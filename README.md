@@ -11,7 +11,7 @@ Supports `.docx`, `.docm`, `.dotx`. Legacy binary `.doc` files are not supported
 Run **Library: Install** and paste:
 
 ```
-https://github.com/yourusername/silverbullet-docxviewer/blob/main/PLUG.md
+https://github.com/kailingma/silverbullet-docxviewer/blob/main/PLUG.md
 ```
 
 ## Install manually
@@ -20,10 +20,10 @@ Add to a page tagged `meta/config` in your space:
 
 ```yaml
 plugs:
-  - "github:yourusername/silverbullet-docxviewer/docxviewer.plug.js"
+  - "github:kailingma/silverbullet-docxviewer/docxviewer.plug.js"
 ```
 
-For a pinned release: `ghr:yourusername/silverbullet-docxviewer`
+For a pinned release: `ghr:kailingma/silverbullet-docxviewer`
 
 ## Releases
 
