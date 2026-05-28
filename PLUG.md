@@ -1,5 +1,5 @@
 ---
-name: Library/yourusername/silverbullet-docxviewer/PLUG
+name: Library/kailingma/silverbulletmd-docx-viewer/PLUG
 tags: meta/library
 files:
 - docxviewer.plug.js
