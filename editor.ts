@@ -8,6 +8,12 @@ export async function editor(): Promise<{ html: string; script: string }> {
         padding: 0;
         box-sizing: border-box;
       ">
+        <div id="docx-loading" style="
+          display: none;
+          padding: 24px;
+          font-family: sans-serif;
+          color: #666;
+        ">Loading...</div>
         <div id="docx-render" style="
           min-height: 100%;
           background: white;
@@ -27,40 +33,47 @@ export async function editor(): Promise<{ html: string; script: string }> {
     `,
     script: `
       (function () {
-        const DOCX_PREVIEW_CDN =
-          "https://cdn.jsdelivr.net/npm/docx-preview@0.3.5/dist/docx-preview.min.js";
+        // Use dynamic import() with an ESM CDN — avoids injecting <script> tags
+        // which can trigger new-tab navigation in SB's PWA iframe sandbox.
+        // esm.sh bundles jszip as a dependency so no separate load needed.
+        const DOCX_PREVIEW_ESM = "https://esm.sh/docx-preview@0.3.7";
+
+        let docxModule = null;
 
         function showError(msg) {
           const el = document.getElementById("docx-error");
           const render = document.getElementById("docx-render");
+          const loading = document.getElementById("docx-loading");
           if (el) { el.style.display = "block"; el.textContent = "Error: " + msg; }
           if (render) render.style.display = "none";
+          if (loading) loading.style.display = "none";
         }
 
-        function loadScript(src) {
-          return new Promise((resolve, reject) => {
-            if (document.querySelector('script[src="' + src + '"]')) {
-              resolve();
-              return;
-            }
-            const s = document.createElement("script");
-            s.src = src;
-            s.onload = resolve;
-            s.onerror = () => reject(new Error("Failed to load " + src));
-            document.head.appendChild(s);
-          });
+        function showLoading(visible) {
+          const el = document.getElementById("docx-loading");
+          if (el) el.style.display = visible ? "block" : "none";
+        }
+
+        async function getDocxModule() {
+          if (docxModule) return docxModule;
+          docxModule = await import(DOCX_PREVIEW_ESM);
+          return docxModule;
         }
 
         async function renderDocx(data) {
-          try {
-            await loadScript(DOCX_PREVIEW_CDN);
-          } catch (e) {
-            showError("Could not load docx-preview library. Check network access.");
-            return;
-          }
-
           const container = document.getElementById("docx-render");
           if (!container) return;
+
+          showLoading(true);
+          document.getElementById("docx-error").style.display = "none";
+
+          let mod;
+          try {
+            mod = await getDocxModule();
+          } catch (e) {
+            showError("Could not load docx-preview. Check network access to esm.sh.");
+            return;
+          }
 
           try {
             const blob = new Blob([data], {
@@ -68,10 +81,9 @@ export async function editor(): Promise<{ html: string; script: string }> {
             });
 
             container.innerHTML = "";
-            document.getElementById("docx-error").style.display = "none";
             container.style.display = "";
 
-            await docx.renderAsync(blob, container, null, {
+            await mod.renderAsync(blob, container, null, {
               className: "docx-preview",
               inWrapper: false,
               ignoreWidth: false,
@@ -87,6 +99,9 @@ export async function editor(): Promise<{ html: string; script: string }> {
             });
           } catch (e) {
             showError(e.message || "Failed to render document.");
+            return;
+          } finally {
+            showLoading(false);
           }
         }
 
@@ -97,10 +112,6 @@ export async function editor(): Promise<{ html: string; script: string }> {
         globalThis.silverbullet.addEventListener("file-update", (event) => {
           renderDocx(event.detail.data);
         });
-
-        // This is a read-only viewer — no save handling needed.
-        // If you want to signal to SB that no edits are possible, simply
-        // never emit "file-changed" or "file-saved".
       })();
     `,
   };
