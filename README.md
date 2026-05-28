@@ -1,4 +1,4 @@
-# silverbullet-docxviewer
+# silverbulletmd-docx-viewer
 
 A [SilverBullet](https://silverbullet.md) plug that renders `.docx` files in-place using [docx-preview](https://github.com/VolodymyrBaydalka/docxjs). The titlebar stays visible; the viewer replaces only the editor area.
 
@@ -11,7 +11,7 @@ Supports `.docx`, `.docm`, `.dotx`. Legacy binary `.doc` files are not supported
 Run **Library: Install** and paste:
 
 ```
-https://github.com/kailingma/silverbullet-docxviewer/blob/main/PLUG.md
+https://github.com/kailingma/silverbulletmd-docx-viewer/blob/main/PLUG.md
 ```
 
 ## Install manually
@@ -20,10 +20,10 @@ Add to a page tagged `meta/config` in your space:
 
 ```yaml
 plugs:
-  - "github:kailingma/silverbullet-docxviewer/docxviewer.plug.js"
+  - "github:kailingma/silverbulletmd-docx-viewer/docxviewer.plug.js"
 ```
 
-For a pinned release: `ghr:kailingma/silverbullet-docxviewer`
+For a pinned release: `ghr:kailingma/silverbulletmd-docx-viewer`
 
 ## Releases
 
