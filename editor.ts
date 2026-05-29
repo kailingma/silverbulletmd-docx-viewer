@@ -1,12 +1,39 @@
 export async function editor(): Promise<{ html: string; script: string }> {
+  // Fetch docx-preview from the worker (runs outside the sandboxed iframe,
+  // in the normal SB plug context) and inline it so the iframe never makes
+  // any outbound network requests — those trigger PWA new-tab ejection.
+  let docxSource = "";
+  try {
+    const res = await fetch(
+      "https://cdn.jsdelivr.net/npm/docx-preview@0.3.7/dist/docx-preview.min.js",
+    );
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    docxSource = await res.text();
+  } catch (e) {
+    // If the fetch fails at plug-load time, we'll show the error inside the
+    // viewer when it first opens rather than crashing the whole plug.
+    docxSource = `console.error("docx-preview failed to load: ${String(e).replace(/"/g, "'")}");`;
+  }
+
+  // jszip is a peer dependency that docx-preview's UMD build expects as a
+  // global JSZip. Fetch it the same way.
+  let jszipSource = "";
+  try {
+    const res = await fetch(
+      "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js",
+    );
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    jszipSource = await res.text();
+  } catch (e) {
+    jszipSource = `console.error("jszip failed to load: ${String(e).replace(/"/g, "'")}");`;
+  }
+
   return {
     html: `
       <style>
-        /* ─── Reset & base ─────────────────────────────────────────────── */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-          /* Light theme — mirrors SB theme.scss html {} block exactly */
           --sb-bg:          #fff;
           --sb-fg:          #111;
           --sb-page-bg:     #fff;
@@ -32,7 +59,6 @@ export async function editor(): Promise<{ html: string; script: string }> {
 
         @media (prefers-color-scheme: dark) {
           :root {
-            /* Dark theme — mirrors SB theme.scss html[data-theme="dark"] {} */
             --sb-bg:          #111;
             --sb-fg:          #fff;
             --sb-page-bg:     #1a1a1a;
@@ -59,15 +85,12 @@ export async function editor(): Promise<{ html: string; script: string }> {
           font-family: var(--sb-ui-font);
         }
 
-        /* ─── Scroll container ─────────────────────────────────────────── */
         #docx-container {
           height: 100%;
           overflow-y: auto;
           background: var(--sb-canvas-bg);
-          padding: 0;
         }
 
-        /* ─── Loading / error states ────────────────────────────────────── */
         #docx-loading {
           display: none;
           padding: 24px;
@@ -82,57 +105,39 @@ export async function editor(): Promise<{ html: string; script: string }> {
           font-size: 14px;
         }
 
-        /* ─── Page card ─────────────────────────────────────────────────── */
         #docx-render {
-          min-height: 100%;
           background: var(--sb-page-bg);
           max-width: var(--sb-page-w);
           margin: var(--sb-page-margin);
           box-shadow: var(--sb-shadow);
           padding: var(--sb-page-pad);
+          min-height: calc(100% - 48px);
         }
 
-        /* ─── docx-preview emitted classes (className="docx-preview") ──── */
-        /* The library prefixes all its classes with the className option.
-           We set className:"docx-preview", so classes are:
-           .docx-preview-wrapper, .docx-preview-page, .docx-preview-body,
-           .docx-preview-header, .docx-preview-footer, etc.
-           We also cover the default prefix "docx" as a fallback.          */
-
+        /* docx-preview emitted classes (className: "docx-preview") */
         .docx-preview-wrapper, .docx-wrapper {
           background: transparent !important;
           padding: 0 !important;
         }
-
         .docx-preview-page, .docx-page {
           background: var(--sb-page-bg) !important;
           color: var(--sb-fg) !important;
           box-shadow: none !important;
           margin: 0 0 1px 0 !important;
-          padding: 0 !important;
         }
-
-        /* Headers and footers — keep them muted like SB's meta text */
         .docx-preview-header, .docx-header,
         .docx-preview-footer, .docx-footer {
           color: var(--sb-subtle) !important;
           font-size: 0.85em !important;
           border-color: var(--sb-border) !important;
         }
-
-        /* Body text inherits SB's fg colour */
         .docx-preview-body, .docx-body {
           color: var(--sb-fg) !important;
         }
-
-        /* Hyperlinks */
         .docx-preview-wrapper a, .docx-wrapper a {
           color: var(--sb-link) !important;
-          text-decoration: underline;
-          pointer-events: none; /* prevent navigation inside viewer */
+          pointer-events: none;
         }
-
-        /* Tables — match SB editor table styles */
         .docx-preview-wrapper table, .docx-wrapper table {
           border-collapse: collapse;
           width: 100%;
@@ -145,8 +150,6 @@ export async function editor(): Promise<{ html: string; script: string }> {
         .docx-wrapper tr:nth-child(even) td {
           background: var(--sb-table-even) !important;
         }
-
-        /* Inline code / pre */
         .docx-preview-wrapper code, .docx-wrapper code,
         .docx-preview-wrapper pre,  .docx-wrapper pre {
           background: var(--sb-code-bg) !important;
@@ -156,8 +159,6 @@ export async function editor(): Promise<{ html: string; script: string }> {
           border-radius: 3px;
           padding: 0.1em 0.3em;
         }
-
-        /* Blockquotes */
         .docx-preview-wrapper blockquote, .docx-wrapper blockquote {
           border-left: 3px solid var(--sb-blockquote-border);
           background: var(--sb-subtle-bg);
@@ -165,8 +166,6 @@ export async function editor(): Promise<{ html: string; script: string }> {
           padding: 0.5em 1em;
           margin: 0.5em 0;
         }
-
-        /* Page break dividers */
         .docx-preview-page-break, .docx-page-break {
           border: none !important;
           border-top: 1px solid var(--sb-border) !important;
@@ -182,9 +181,18 @@ export async function editor(): Promise<{ html: string; script: string }> {
     `,
 
     script: `
+      // jszip and docx-preview are inlined at plug-load time by the worker —
+      // the iframe makes zero outbound network requests, so the PWA never
+      // has cause to open an external window.
+      ${jszipSource}
+      ${docxSource}
+
       (function () {
-        const DOCX_ESM = "https://esm.sh/docx-preview@0.3.7";
-        let docxModule = null;
+        // Block all link clicks inside the rendered document.
+        document.addEventListener("click", function (e) {
+          const a = e.target && e.target.closest && e.target.closest("a");
+          if (a) { e.preventDefault(); e.stopPropagation(); }
+        }, true);
 
         function showError(msg) {
           document.getElementById("docx-error").style.display  = "block";
@@ -197,19 +205,12 @@ export async function editor(): Promise<{ html: string; script: string }> {
           document.getElementById("docx-loading").style.display = on ? "block" : "none";
         }
 
-        // Intercept ALL clicks inside the rendered document so links never
-        // trigger navigation (which opens a new tab in PWA mode).
-        document.addEventListener("click", function (e) {
-          const a = e.target.closest("a");
-          if (a) { e.preventDefault(); e.stopPropagation(); }
-        }, true);
-
-        async function getModule() {
-          if (!docxModule) docxModule = await import(DOCX_ESM);
-          return docxModule;
-        }
-
         async function render(data) {
+          if (typeof docx === "undefined" || typeof docx.renderAsync !== "function") {
+            showError("docx-preview library not available.");
+            return;
+          }
+
           const container = document.getElementById("docx-render");
           if (!container) return;
 
@@ -217,34 +218,26 @@ export async function editor(): Promise<{ html: string; script: string }> {
           document.getElementById("docx-error").style.display  = "none";
           document.getElementById("docx-render").style.display = "";
 
-          let mod;
-          try {
-            mod = await getModule();
-          } catch (e) {
-            showError("Could not load docx-preview. Check network access to esm.sh.");
-            return;
-          }
-
           try {
             container.innerHTML = "";
             const blob = new Blob([data], {
               type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             });
 
-            await mod.renderAsync(blob, container, null, {
-              className:                    "docx-preview",
-              inWrapper:                    true,
-              ignoreWidth:                  false,
-              ignoreHeight:                 false,
-              ignoreFonts:                  false,
-              breakPages:                   true,
-              ignoreLastRenderedPageBreak:  true,
-              renderHeaders:                true,
-              renderFooters:                true,
-              renderFootnotes:              true,
-              renderEndnotes:               true,
-              renderChanges:                false,
-              useBase64URL:                 true,
+            await docx.renderAsync(blob, container, null, {
+              className:                   "docx-preview",
+              inWrapper:                   true,
+              ignoreWidth:                 false,
+              ignoreHeight:                false,
+              ignoreFonts:                 false,
+              breakPages:                  true,
+              ignoreLastRenderedPageBreak: true,
+              renderHeaders:               true,
+              renderFooters:               true,
+              renderFootnotes:             true,
+              renderEndnotes:              true,
+              renderChanges:               false,
+              useBase64URL:                true,
             });
           } catch (e) {
             showError(e.message || "Failed to render document.");
