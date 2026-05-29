@@ -1,10 +1,8 @@
-function h(e){let o=atob(e),t=o.length,r=new Uint8Array(t);for(let a=0;a<t;a++)r[a]=o.charCodeAt(a);return r}function b(e){typeof e=="string"&&(e=new TextEncoder().encode(e));let o="",t=e.byteLength;for(let r=0;r<t;r++)o+=String.fromCharCode(e[r]);return btoa(o)}var k=new Uint8Array(16),v=class{constructor(e="",o=1e3){this.prefix=e,this.maxCaptureSize=o,this.prefix=e,this.originalConsole={log:console.log.bind(console),info:console.info.bind(console),warn:console.warn.bind(console),error:console.error.bind(console),debug:console.debug.bind(console)},this.patchConsole()}originalConsole;logBuffer=[];patchConsole(){let e=o=>(...t)=>{let r=this.prefix?[this.prefix,...t]:t;this.originalConsole[o](...r),this.captureLog(o,t)};console.log=e("log"),console.info=e("info"),console.warn=e("warn"),console.error=e("error"),console.debug=e("debug")}captureLog(e,o){let t={level:e,timestamp:Date.now(),message:o.map(r=>{if(typeof r=="string")return r;try{return JSON.stringify(r)}catch{return String(r)}}).join(" ")};this.logBuffer.push(t),this.logBuffer.length>this.maxCaptureSize&&this.logBuffer.shift()}async postToServer(e,o){if(this.logBuffer.length>0){let r=[...this.logBuffer];this.logBuffer=[];try{if(!(await fetch(e,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(r.map(s=>({...s,source:o})))})).ok)throw new Error("Failed to post logs to server")}catch(a){console.warn("Could not post logs to server",a.message),this.logBuffer.unshift(...r)}}}},p;function x(e=""){return p=new v(e),p}var i=e=>{throw new Error("Not initialized yet")},l=typeof window>"u"&&typeof globalThis.WebSocketPair>"u",c=new Map,d=0;l&&(globalThis.syscall=async(e,...o)=>await new Promise((t,r)=>{d++,c.set(d,{resolve:t,reject:r}),i({type:"sys",id:d,name:e,args:o})}));function g(e,o,t){l&&(i=t,self.addEventListener("message",r=>{(async()=>{let a=r.data;switch(a.type){case"inv":{let s=e[a.name];if(!s)throw new Error(`Function not loaded: ${a.name}`);try{let n=await Promise.resolve(s(...a.args||[]));i({type:"invr",id:a.id,result:n})}catch(n){console.error("An exception was thrown as a result of invoking function",a.name,"error:",n.message),i({type:"invr",id:a.id,error:n.message})}}break;case"sysr":{let s=a.id,n=c.get(s);if(!n)throw Error("Invalid request id");c.delete(s),a.error?n.reject(new Error(a.error)):n.resolve(a.result)}break}})().catch(console.error)}),i({type:"manifest",manifest:o}),x(`[${o.name} plug]`))}async function w(e,o){if(typeof e!="string"){let t=new Uint8Array(await e.arrayBuffer()),r=t.length>0?b(t):void 0;o={method:e.method,headers:Object.fromEntries(e.headers.entries()),base64Body:r},e=e.url}return syscall("sandboxFetch.fetch",e,o)}globalThis.nativeFetch=globalThis.fetch;function y(){globalThis.fetch=async(e,o)=>{let t=o?.body?b(new Uint8Array(await new Response(o.body).arrayBuffer())):void 0,r=await w(e,o&&{method:o.method,headers:o.headers,base64Body:t});return new Response(r.base64Body?h(r.base64Body):null,{status:r.status,headers:r.headers})}}l&&y();async function u(){return{html:`
+function m(e){let o=atob(e),r=o.length,t=new Uint8Array(r);for(let n=0;n<r;n++)t[n]=o.charCodeAt(n);return t}function b(e){typeof e=="string"&&(e=new TextEncoder().encode(e));let o="",r=e.byteLength;for(let t=0;t<r;t++)o+=String.fromCharCode(e[t]);return btoa(o)}var k=new Uint8Array(16),w=class{constructor(e="",o=1e3){this.prefix=e,this.maxCaptureSize=o,this.prefix=e,this.originalConsole={log:console.log.bind(console),info:console.info.bind(console),warn:console.warn.bind(console),error:console.error.bind(console),debug:console.debug.bind(console)},this.patchConsole()}originalConsole;logBuffer=[];patchConsole(){let e=o=>(...r)=>{let t=this.prefix?[this.prefix,...r]:r;this.originalConsole[o](...t),this.captureLog(o,r)};console.log=e("log"),console.info=e("info"),console.warn=e("warn"),console.error=e("error"),console.debug=e("debug")}captureLog(e,o){let r={level:e,timestamp:Date.now(),message:o.map(t=>{if(typeof t=="string")return t;try{return JSON.stringify(t)}catch{return String(t)}}).join(" ")};this.logBuffer.push(r),this.logBuffer.length>this.maxCaptureSize&&this.logBuffer.shift()}async postToServer(e,o){if(this.logBuffer.length>0){let t=[...this.logBuffer];this.logBuffer=[];try{if(!(await fetch(e,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(t.map(s=>({...s,source:o})))})).ok)throw new Error("Failed to post logs to server")}catch(n){console.warn("Could not post logs to server",n.message),this.logBuffer.unshift(...t)}}}},p;function v(e=""){return p=new w(e),p}var i=e=>{throw new Error("Not initialized yet")},l=typeof window>"u"&&typeof globalThis.WebSocketPair>"u",c=new Map,d=0;l&&(globalThis.syscall=async(e,...o)=>await new Promise((r,t)=>{d++,c.set(d,{resolve:r,reject:t}),i({type:"sys",id:d,name:e,args:o})}));function g(e,o,r){l&&(i=r,self.addEventListener("message",t=>{(async()=>{let n=t.data;switch(n.type){case"inv":{let s=e[n.name];if(!s)throw new Error(`Function not loaded: ${n.name}`);try{let a=await Promise.resolve(s(...n.args||[]));i({type:"invr",id:n.id,result:a})}catch(a){console.error("An exception was thrown as a result of invoking function",n.name,"error:",a.message),i({type:"invr",id:n.id,error:a.message})}}break;case"sysr":{let s=n.id,a=c.get(s);if(!a)throw Error("Invalid request id");c.delete(s),n.error?a.reject(new Error(n.error)):a.resolve(n.result)}break}})().catch(console.error)}),i({type:"manifest",manifest:o}),v(`[${o.name} plug]`))}async function x(e,o){if(typeof e!="string"){let r=new Uint8Array(await e.arrayBuffer()),t=r.length>0?b(r):void 0;o={method:e.method,headers:Object.fromEntries(e.headers.entries()),base64Body:t},e=e.url}return syscall("sandboxFetch.fetch",e,o)}globalThis.nativeFetch=globalThis.fetch;function y(){globalThis.fetch=async(e,o)=>{let r=o?.body?b(new Uint8Array(await new Response(o.body).arrayBuffer())):void 0,t=await x(e,o&&{method:o.method,headers:o.headers,base64Body:r});return new Response(t.base64Body?m(t.base64Body):null,{status:t.status,headers:t.headers})}}l&&y();async function f(){let e="";try{let r=await fetch("https://cdn.jsdelivr.net/npm/docx-preview@0.3.7/dist/docx-preview.min.js");if(!r.ok)throw new Error(`HTTP ${r.status}`);e=await r.text()}catch(r){e=`console.error("docx-preview failed to load: ${String(r).replace(/"/g,"'")}");`}let o="";try{let r=await fetch("https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js");if(!r.ok)throw new Error(`HTTP ${r.status}`);o=await r.text()}catch(r){o=`console.error("jszip failed to load: ${String(r).replace(/"/g,"'")}");`}return{html:`
       <style>
-        /* \u2500\u2500\u2500 Reset & base \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-          /* Light theme \u2014 mirrors SB theme.scss html {} block exactly */
           --sb-bg:          #fff;
           --sb-fg:          #111;
           --sb-page-bg:     #fff;
@@ -30,7 +28,6 @@ function h(e){let o=atob(e),t=o.length,r=new Uint8Array(t);for(let a=0;a<t;a++)r
 
         @media (prefers-color-scheme: dark) {
           :root {
-            /* Dark theme \u2014 mirrors SB theme.scss html[data-theme="dark"] {} */
             --sb-bg:          #111;
             --sb-fg:          #fff;
             --sb-page-bg:     #1a1a1a;
@@ -57,15 +54,12 @@ function h(e){let o=atob(e),t=o.length,r=new Uint8Array(t);for(let a=0;a<t;a++)r
           font-family: var(--sb-ui-font);
         }
 
-        /* \u2500\u2500\u2500 Scroll container \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
         #docx-container {
           height: 100%;
           overflow-y: auto;
           background: var(--sb-canvas-bg);
-          padding: 0;
         }
 
-        /* \u2500\u2500\u2500 Loading / error states \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
         #docx-loading {
           display: none;
           padding: 24px;
@@ -80,57 +74,39 @@ function h(e){let o=atob(e),t=o.length,r=new Uint8Array(t);for(let a=0;a<t;a++)r
           font-size: 14px;
         }
 
-        /* \u2500\u2500\u2500 Page card \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
         #docx-render {
-          min-height: 100%;
           background: var(--sb-page-bg);
           max-width: var(--sb-page-w);
           margin: var(--sb-page-margin);
           box-shadow: var(--sb-shadow);
           padding: var(--sb-page-pad);
+          min-height: calc(100% - 48px);
         }
 
-        /* \u2500\u2500\u2500 docx-preview emitted classes (className="docx-preview") \u2500\u2500\u2500\u2500 */
-        /* The library prefixes all its classes with the className option.
-           We set className:"docx-preview", so classes are:
-           .docx-preview-wrapper, .docx-preview-page, .docx-preview-body,
-           .docx-preview-header, .docx-preview-footer, etc.
-           We also cover the default prefix "docx" as a fallback.          */
-
+        /* docx-preview emitted classes (className: "docx-preview") */
         .docx-preview-wrapper, .docx-wrapper {
           background: transparent !important;
           padding: 0 !important;
         }
-
         .docx-preview-page, .docx-page {
           background: var(--sb-page-bg) !important;
           color: var(--sb-fg) !important;
           box-shadow: none !important;
           margin: 0 0 1px 0 !important;
-          padding: 0 !important;
         }
-
-        /* Headers and footers \u2014 keep them muted like SB's meta text */
         .docx-preview-header, .docx-header,
         .docx-preview-footer, .docx-footer {
           color: var(--sb-subtle) !important;
           font-size: 0.85em !important;
           border-color: var(--sb-border) !important;
         }
-
-        /* Body text inherits SB's fg colour */
         .docx-preview-body, .docx-body {
           color: var(--sb-fg) !important;
         }
-
-        /* Hyperlinks */
         .docx-preview-wrapper a, .docx-wrapper a {
           color: var(--sb-link) !important;
-          text-decoration: underline;
-          pointer-events: none; /* prevent navigation inside viewer */
+          pointer-events: none;
         }
-
-        /* Tables \u2014 match SB editor table styles */
         .docx-preview-wrapper table, .docx-wrapper table {
           border-collapse: collapse;
           width: 100%;
@@ -143,8 +119,6 @@ function h(e){let o=atob(e),t=o.length,r=new Uint8Array(t);for(let a=0;a<t;a++)r
         .docx-wrapper tr:nth-child(even) td {
           background: var(--sb-table-even) !important;
         }
-
-        /* Inline code / pre */
         .docx-preview-wrapper code, .docx-wrapper code,
         .docx-preview-wrapper pre,  .docx-wrapper pre {
           background: var(--sb-code-bg) !important;
@@ -154,8 +128,6 @@ function h(e){let o=atob(e),t=o.length,r=new Uint8Array(t);for(let a=0;a<t;a++)r
           border-radius: 3px;
           padding: 0.1em 0.3em;
         }
-
-        /* Blockquotes */
         .docx-preview-wrapper blockquote, .docx-wrapper blockquote {
           border-left: 3px solid var(--sb-blockquote-border);
           background: var(--sb-subtle-bg);
@@ -163,8 +135,6 @@ function h(e){let o=atob(e),t=o.length,r=new Uint8Array(t);for(let a=0;a<t;a++)r
           padding: 0.5em 1em;
           margin: 0.5em 0;
         }
-
-        /* Page break dividers */
         .docx-preview-page-break, .docx-page-break {
           border: none !important;
           border-top: 1px solid var(--sb-border) !important;
@@ -178,9 +148,18 @@ function h(e){let o=atob(e),t=o.length,r=new Uint8Array(t);for(let a=0;a<t;a++)r
         <div id="docx-error"></div>
       </div>
     `,script:`
+      // jszip and docx-preview are inlined at plug-load time by the worker \u2014
+      // the iframe makes zero outbound network requests, so the PWA never
+      // has cause to open an external window.
+      ${o}
+      ${e}
+
       (function () {
-        const DOCX_ESM = "https://esm.sh/docx-preview@0.3.7";
-        let docxModule = null;
+        // Block all link clicks inside the rendered document.
+        document.addEventListener("click", function (e) {
+          const a = e.target && e.target.closest && e.target.closest("a");
+          if (a) { e.preventDefault(); e.stopPropagation(); }
+        }, true);
 
         function showError(msg) {
           document.getElementById("docx-error").style.display  = "block";
@@ -193,19 +172,12 @@ function h(e){let o=atob(e),t=o.length,r=new Uint8Array(t);for(let a=0;a<t;a++)r
           document.getElementById("docx-loading").style.display = on ? "block" : "none";
         }
 
-        // Intercept ALL clicks inside the rendered document so links never
-        // trigger navigation (which opens a new tab in PWA mode).
-        document.addEventListener("click", function (e) {
-          const a = e.target.closest("a");
-          if (a) { e.preventDefault(); e.stopPropagation(); }
-        }, true);
-
-        async function getModule() {
-          if (!docxModule) docxModule = await import(DOCX_ESM);
-          return docxModule;
-        }
-
         async function render(data) {
+          if (typeof docx === "undefined" || typeof docx.renderAsync !== "function") {
+            showError("docx-preview library not available.");
+            return;
+          }
+
           const container = document.getElementById("docx-render");
           if (!container) return;
 
@@ -213,34 +185,26 @@ function h(e){let o=atob(e),t=o.length,r=new Uint8Array(t);for(let a=0;a<t;a++)r
           document.getElementById("docx-error").style.display  = "none";
           document.getElementById("docx-render").style.display = "";
 
-          let mod;
-          try {
-            mod = await getModule();
-          } catch (e) {
-            showError("Could not load docx-preview. Check network access to esm.sh.");
-            return;
-          }
-
           try {
             container.innerHTML = "";
             const blob = new Blob([data], {
               type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             });
 
-            await mod.renderAsync(blob, container, null, {
-              className:                    "docx-preview",
-              inWrapper:                    true,
-              ignoreWidth:                  false,
-              ignoreHeight:                 false,
-              ignoreFonts:                  false,
-              breakPages:                   true,
-              ignoreLastRenderedPageBreak:  true,
-              renderHeaders:                true,
-              renderFooters:                true,
-              renderFootnotes:              true,
-              renderEndnotes:               true,
-              renderChanges:                false,
-              useBase64URL:                 true,
+            await docx.renderAsync(blob, container, null, {
+              className:                   "docx-preview",
+              inWrapper:                   true,
+              ignoreWidth:                 false,
+              ignoreHeight:                false,
+              ignoreFonts:                 false,
+              breakPages:                  true,
+              ignoreLastRenderedPageBreak: true,
+              renderHeaders:               true,
+              renderFooters:               true,
+              renderFootnotes:             true,
+              renderEndnotes:              true,
+              renderChanges:               false,
+              useBase64URL:                true,
             });
           } catch (e) {
             showError(e.message || "Failed to render document.");
@@ -252,5 +216,5 @@ function h(e){let o=atob(e),t=o.length,r=new Uint8Array(t);for(let a=0;a<t;a++)r
         globalThis.silverbullet.addEventListener("file-open",   e => render(e.detail.data));
         globalThis.silverbullet.addEventListener("file-update", e => render(e.detail.data));
       })();
-    `}}var f={DOCXEditor:u},m={name:"docxviewer",functions:{DOCXEditor:{path:"./editor.ts:editor",editor:["doc","docx","dotx","docm"]}},assets:{}},M={manifest:m,functionMapping:f};g(f,m,self.postMessage);export{M as plug};
+    `}}var u={DOCXEditor:f},h={name:"docxviewer",functions:{DOCXEditor:{path:"./editor.ts:editor",editor:["doc","docx","dotx","docm"]}},assets:{}},T={manifest:h,functionMapping:u};g(u,h,self.postMessage);export{T as plug};
 //# sourceMappingURL=docxviewer.plug.js.map
