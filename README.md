@@ -36,6 +36,6 @@ npm install
 npm run build
 ```
 
-# Todo
+## Todo
 - Make the docx-viewer open in the same tab, similar to [silverbullet-pdf](https://github.com/MrMugame/silverbullet-pdf)
 - Integrate greater features into the viewer (dependent on using a different viewer than docx-preview)
