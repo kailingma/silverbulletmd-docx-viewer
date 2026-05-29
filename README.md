@@ -35,3 +35,7 @@ Commits whose message starts with `v<semver>` (e.g. `v0.2.0`) are automatically 
 npm install
 npm run build
 ```
+
+# Todo
+- Make the docx-viewer open in the same tab, similar to [silverbullet-pdf](https://github.com/MrMugame/silverbullet-pdf)
+- Integrate greater features into the viewer (dependent on using a different viewer than docx-preview)
